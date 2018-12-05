@@ -1,0 +1,85 @@
+<beans xmlns="http://www.springframework.org/schema/beans"  
+ xmlns:context="http://www.springframework.org/schema/context"  
+ xmlns:p="http://www.springframework.org/schema/p"  
+ xmlns:mvc="http://www.springframework.org/schema/mvc"  
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:aop="http://www.springframework.org/schema/aop"  
+ xsi:schemaLocation="http://www.springframework.org/schema/beans  
+      http://www.springframework.org/schema/beans/spring-beans-3.0.xsd  
+      http://www.springframework.org/schema/context  
+      http://www.springframework.org/schema/context/spring-context.xsd  
+      http://www.springframework.org/schema/mvc  
+      http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+      http://www.springframework.org/schema/aop
+      http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+      ">
+    <!-- mvc-3.0 not support <mvc:exclude-mapping> configuration -->
+    <!-- mvc-3.2 support <mvc:exclude-mapping> configuration -->
+
+	<!-- start spring annotation -->
+	<mvc:annotation-driven/>
+	
+    <!-- start spring scan, scan annotation to bean -->
+    <context:component-scan base-package="com.paletter.stdy.activiti.spring" />
+    
+    <bean id="dataSource"
+        class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver" />
+        <property name="url" value="jdbc:mysql://localhost:3306/test" />
+        <property name="username" value="root" />
+        <property name="password" value="root" />
+    </bean>
+    <bean id="transactionManager"
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    
+    <!-- Activiti -->
+    <bean id="jsonUtil" class="com.paletter.stdy.activiti.spring.JSONUtil"></bean>
+    
+	<bean id="processEngineConfiguration" class="org.activiti.spring.SpringProcessEngineConfiguration">
+        <property name="dataSource" ref="dataSource" />
+        <property name="transactionManager" ref="transactionManager" />
+        <property name="databaseSchemaUpdate" value="true" />
+        <property name="jobExecutorActivate" value="true" />
+        <property name="deploymentResources">
+            <list>
+                <value>classpath*:/bpmn/*</value>
+            </list>
+        </property>
+        <property name="beans">
+		    <map>
+		      <entry key="JSONUtil" value-ref="jsonUtil" />
+		      <entry key="packageService" value-ref="packageService" />
+		    </map>
+		</property>
+    </bean>
+    
+    <bean id="processEngine" class="org.activiti.spring.ProcessEngineFactoryBean">
+        <property name="processEngineConfiguration" ref="processEngineConfiguration" />
+    </bean>
+    <bean id="repositoryService" factory-bean="processEngine"
+        factory-method="getRepositoryService" />
+    <bean id="runtimeService" factory-bean="processEngine"
+        factory-method="getRuntimeService" />
+    <bean id="taskService" factory-bean="processEngine"
+        factory-method="getTaskService" />
+    <bean id="historyService" factory-bean="processEngine"
+        factory-method="getHistoryService" />
+    <bean id="managementService" factory-bean="processEngine"
+        factory-method="getManagementService" />
+    <bean id="IdentityService" factory-bean="processEngine"
+        factory-method="getIdentityService" />
+    <!-- Activiti End -->
+    
+    
+    <!-- Default ViewResolver -->
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+        <property name="prefix" value="/WEB-INF/"/>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+    
+    <mvc:resources location="/public/" mapping="/public/**"/>
+  	
+</beans>
