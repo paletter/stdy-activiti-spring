@@ -156,6 +156,11 @@
         <version>1.2</version>
     </dependency>
     <!--servlet-->
+    <dependency>
+      	<groupId>com.h2database</groupId>
+      	<artifactId>h2</artifactId>
+      	<version>1.4.193</version>
+    </dependency>
   </dependencies>
   
   <build>
