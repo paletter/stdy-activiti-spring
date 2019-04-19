@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.engine.ActivitiException;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.impl.util.json.JSONObject;
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.google.common.collect.Lists;
 import com.paletter.stdy.activiti.spring.CacheUtil;
+import com.paletter.stdy.activiti.spring.dto.CreatePackageDTO;
 import com.paletter.stdy.activiti.spring.dto.TaskDTO;
 
 @Controller
@@ -87,7 +89,20 @@ public class PackageController {
 		if (task != null) {
 			Map<String, Object> variables = new HashMap<String, Object>();
 			variables.put("params", params);
-			taskService.complete(task.getId(), variables);
+			try {
+				
+				taskService.complete(task.getId(), variables);
+			} catch (Exception e) {
+				
+				System.out.println(e.getMessage());
+				e.printStackTrace();
+				System.out.println(e.getCause().getMessage());
+				e.getCause().printStackTrace();
+				System.out.println(e.getCause() instanceof ActivitiException);
+
+				System.out.println(e.getCause().getCause().getMessage());
+				throw e;
+			}
 		}
 		return "0";
 	}

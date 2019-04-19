@@ -7,6 +7,10 @@ import java.util.Map;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.history.HistoricDetail;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.impl.util.json.JSONObject;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
@@ -62,13 +66,75 @@ public class PackageTest {
 			json.put("gameName", "1");
 			packageController.start(json.toString());
 	
-			Task task = taskService.createTaskQuery().processInstanceBusinessKeyLike(packageNo).singleResult();
-			if (task != null) {
-				json = new JSONObject();
-				json.put("state", 1);
-				Map<String, Object> variables = new HashMap<String, Object>();
-				variables.put("params", json.toString());
-				taskService.complete(task.getId(), variables);
+			List<HistoricDetail> vvv = historyService.createHistoricDetailQuery().list();
+			System.out.println(vvv);
+			
+			List v2 = historyService.createHistoricActivityInstanceQuery().list();
+			
+			List<HistoricProcessInstance> pp = historyService.createHistoricProcessInstanceQuery().processInstanceBusinessKey(packageNo).list();
+			System.out.println(pp);
+			
+			{
+				// Manager Audit Reject
+				Task task = taskService.createTaskQuery().processInstanceBusinessKeyLike(packageNo).singleResult();
+				if (task != null) {
+					json = new JSONObject();
+					json.put("state", 0);
+					json.put("packageNo", packageNo);
+					Map<String, Object> variables = new HashMap<String, Object>();
+					variables.put("params", json.toString());
+					task = taskService.createTaskQuery().taskId(task.getId()).singleResult();
+					taskService.setAssignee(task.getId(), "fangbo1");
+					taskService.complete(task.getId(), variables);
+				}
+			}
+			
+			v2 = historyService.createHistoricActivityInstanceQuery().list();
+			
+			{
+				// Modify Package
+				Task task = taskService.createTaskQuery().processInstanceBusinessKeyLike(packageNo).singleResult();
+				if (task != null) {
+					json = new JSONObject();
+					json.put("packageNo", packageNo);
+					json.put("gameName", "1");
+					Map<String, Object> variables = new HashMap<String, Object>();
+					variables.put("params", json.toString());
+					task = taskService.createTaskQuery().taskId(task.getId()).singleResult();
+					taskService.setAssignee(task.getId(), "fangbo2");
+					taskService.complete(task.getId(), variables);
+				}
+			}
+			
+			{
+				// Manager Audit
+				Task task = taskService.createTaskQuery().processInstanceBusinessKeyLike(packageNo).singleResult();
+				if (task != null) {
+					json = new JSONObject();
+					json.put("state", 1);
+					json.put("packageNo", packageNo);
+					json.put("type", 1);
+					Map<String, Object> variables = new HashMap<String, Object>();
+					variables.put("params", json.toString());
+					task = taskService.createTaskQuery().taskId(task.getId()).singleResult();
+					taskService.setAssignee(task.getId(), "fangbo3");
+					taskService.complete(task.getId(), variables);
+				}
+			}
+			
+			{
+				// Developer Audit
+				Task task = taskService.createTaskQuery().processInstanceBusinessKeyLike(packageNo).singleResult();
+				if (task != null) {
+					json = new JSONObject();
+					json.put("state", 1);
+					json.put("packageNo", packageNo);
+					Map<String, Object> variables = new HashMap<String, Object>();
+					variables.put("params", json.toString());
+					task = taskService.createTaskQuery().taskId(task.getId()).singleResult();
+					taskService.setAssignee(task.getId(), "fangbo4");
+					taskService.complete(task.getId(), variables);
+				}
 			}
 	
 			List<Task> tasks = taskService.createTaskQuery().list();
@@ -77,6 +143,23 @@ public class PackageTest {
 				System.out.println("-- task:" + t.getDelegationState());
 				System.out.println("-- task:" + t.getProcessDefinitionId());
 			}
+			
+			System.out.println("###################################################################### History");
+			
+			List<HistoricTaskInstance> history = historyService.createHistoricTaskInstanceQuery().processInstanceBusinessKey(packageNo).list();
+			history.forEach(h -> {
+				System.out.println(h);
+				System.out.println(h.getAssignee());
+				System.out.println(h.getId());
+			});
+			
+
+			List<HistoricDetail> m = historyService.createHistoricDetailQuery().list();
+			System.out.println(m);
+			List m2 = historyService.createHistoricVariableInstanceQuery().list();
+			System.out.println(m2);
+			
+			
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -136,4 +219,5 @@ public class PackageTest {
 			System.out.println("-- task:" + t.getProcessDefinitionId());
 		}
 	}
+	
 }
